@@ -51,8 +51,8 @@ function preload () {
 function create () {
     socket = new WebSocket('ws://localhost:3000');
 
-    socket.onopen = () => {
-        console.log('New player');
+    socket.onopen = (data) => {
+        console.log('New player', data);
     };
 
     socket.onclose = () => {
@@ -64,6 +64,8 @@ function create () {
         const liElem = document.createElement('li');
         liElem.innerText = ws.data;
         list.appendChild(liElem);
+
+        console.log(ws.data);
     };
 
     this.add.image(400, 300, 'sky');
@@ -103,6 +105,9 @@ function create () {
         frameRate: 10,
         repeat: -1
     });
+
+
+    this.physics.add.collider(player, platforms);
 }
 
 function update () {

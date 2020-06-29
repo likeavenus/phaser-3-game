@@ -10,15 +10,16 @@ server.on('connection', ws => {
         x: Math.random() * 800
     };
 
-    server.on('open', () => {
-        ws.send('== OPEN ==')
-    })
+
+    ws.send([players], {
+        binary: false,
+        fin: false
+    });
 
     ws.on('message', msg => {
-        console.log(msg)
         server.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
-                client.send(msg)
+                client.send(msg);
             }
         })
     })
