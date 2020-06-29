@@ -1,8 +1,15 @@
 import Phaser from 'phaser';
 import './assets/css/styles.scss';
 
-const socket = new WebSocket('ws://localhost:3000');
+const form = document.querySelector('form');
+const list = document.querySelector('#list');
+const message = document.querySelector('#msg');
 
+form.addEventListener('submit', e => {
+    e.preventDefault();
+    socket.send(message.value);
+});
+let socket;
 
 var config = {
     type: Phaser.AUTO,
@@ -12,10 +19,20 @@ var config = {
         preload: preload,
         create: create,
         update: update
-    }
+    },
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 300 },
+            debug: false
+        }
+    },
 };
 
 var game = new Phaser.Game(config);
+let platforms;
+let player;
+let cursors;
 
 function preload () {
     this.load.image('sky', 'src/assets/img/sky.png');
@@ -28,34 +45,93 @@ function preload () {
     );
 }
 
+
 function create () {
+    socket = new WebSocket('ws://localhost:3000');
+
+    socket.onopen = () => {
+        console.log('New player');
+    };
+
+    socket.onclose = () => {
+        console.log('close')
+    };
+
+    socket.onmessage = ws => {
+        console.log(ws);
+        const liElem = document.createElement('li');
+        liElem.innerText = ws.data;
+        list.appendChild(liElem);
+    };
+
     this.add.image(400, 300, 'sky');
-    this.add.image(400, 300, 'star');
+
+    platforms = this.physics.add.staticGroup();
+
+    platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+
+    platforms.create(600, 400, 'ground');
+    platforms.create(50, 250, 'ground');
+    platforms.create(750, 220, 'ground');
+
+
+    player = this.physics.add.sprite(Math.random() * 800, 450, 'dude');
+
+    player.setBounce(0.2);
+    player.setCollideWorldBounds(true);
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'turn',
+        frames: [ { key: 'dude', frame: 4 } ],
+        frameRate: 20
+    });
+
+    this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+        frameRate: 10,
+        repeat: -1
+    });
 }
 
-function update ()
-{
+function update () {
+
+    if (cursors.left.isDown)
+    {
+        player.setVelocityX(-160);
+
+        player.anims.play('left', true);
+    }
+    else if (cursors.right.isDown)
+    {
+        player.setVelocityX(160);
+
+        player.anims.play('right', true);
+    }
+    else
+    {
+        player.setVelocityX(0);
+
+        player.anims.play('turn');
+    }
+
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        player.setVelocityY(-330);
+    }
 }
 
 
 
-socket.onclose = () => {
-    console.log('close')
-};
 
-const form = document.querySelector('form');
-const list = document.querySelector('#list');
-const message = document.querySelector('#msg');
 
-form.addEventListener('submit', e => {
-    e.preventDefault();
-    socket.send(message.value);
-});
-
-socket.onmessage = ws => {
-    console.log(ws);
-    const liElem = document.createElement('li');
-    liElem.innerText = ws.data;
-    list.appendChild(liElem);
-};
 
