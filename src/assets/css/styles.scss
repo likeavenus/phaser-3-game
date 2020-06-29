@@ -9,3 +9,26 @@ h1 {
     color: rebeccapurple;
     font-family: 'Roboto', sans-serif;
 }
+
+form {
+    width: 300px;
+    position: fixed;
+    left: 12px;
+    bottom: 5px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    max-height: 200px;
+    overflow: scroll;
+    overflow-x: hidden;
+}
+
+li {
+    background: lightskyblue;
+}
+
+li:nth-child(2n) {
+    background: lightsalmon;
+}
