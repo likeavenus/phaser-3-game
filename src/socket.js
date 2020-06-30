@@ -7,19 +7,21 @@ server.on('connection', ws => {
     ws.id = uuidv4();
 
     players[ws.id] = {
-        x: Math.random() * 800
+        x: Math.random() * 800,
+        id: ws.id
     };
 
+    // ws.send(JSON.stringify(players));
 
-    ws.send([players], {
-        binary: false,
-        fin: false
-    });
 
+    // console.log(JSON.stringify(players))
     ws.on('message', msg => {
+
         server.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
-                client.send(msg);
+                if (client.id !== players[client.id].id) {
+                    client.send(msg);
+                }
             }
         })
     })

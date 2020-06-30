@@ -49,24 +49,6 @@ function preload () {
 
 
 function create () {
-    socket = new WebSocket('ws://localhost:3000');
-
-    socket.onopen = (data) => {
-        console.log('New player', data);
-    };
-
-    socket.onclose = () => {
-        console.log('close')
-    };
-
-    socket.onmessage = ws => {
-        console.log(ws);
-        const liElem = document.createElement('li');
-        liElem.innerText = ws.data;
-        list.appendChild(liElem);
-
-        console.log(ws.data);
-    };
 
     this.add.image(400, 300, 'sky');
 
@@ -108,6 +90,37 @@ function create () {
 
 
     this.physics.add.collider(player, platforms);
+
+    socket = new WebSocket('ws://localhost:3000');
+
+    // socket.onopen = () => {
+    //     console.log('Socket is open')
+    //
+    //     if (socket.readyState === socket.OPEN) {
+    //         socket.send(player.x)
+    //     }
+    // };
+
+    socket.onclose = () => {
+        console.log('close connection')
+    };
+
+    socket.onmessage = ws => {
+        // const liElem = document.createElement('li');
+        // liElem.innerText = ws.data;
+        // list.appendChild(liElem);
+
+        const initialPlayerX = parseInt(ws.data);
+
+        player.x = initialPlayerX;
+        console.log(initialPlayerX);
+    };
+}
+
+function updatePlayerX() {
+    if (socket.readyState === socket.OPEN) {
+        socket.send(player.x)
+    }
 }
 
 function update () {
@@ -117,24 +130,34 @@ function update () {
         player.setVelocityX(-160);
 
         player.anims.play('left', true);
+
+        updatePlayerX();
     }
     else if (cursors.right.isDown)
     {
         player.setVelocityX(160);
 
         player.anims.play('right', true);
+
+        updatePlayerX();
     }
     else
     {
         player.setVelocityX(0);
 
         player.anims.play('turn');
+
+        updatePlayerX();
     }
 
     if (cursors.up.isDown && player.body.touching.down)
     {
         player.setVelocityY(-330);
+
+        updatePlayerX();
     }
+
+
 }
 
 
