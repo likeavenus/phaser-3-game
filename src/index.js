@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import './assets/css/styles.scss';
-import {collectStar} from "./helper";
+import { collectStar } from "./helper";
 
 const form = document.querySelector('form');
 const list = document.querySelector('#list');

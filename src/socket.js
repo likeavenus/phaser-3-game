@@ -11,7 +11,7 @@ server.on('connection', ws => {
     //     id: ws.id
     // };
     players.push({
-        x: Math.random() * 800,
+        x: Math.flooe(Math.random() * 800),
         id: ws.id
     });
 
