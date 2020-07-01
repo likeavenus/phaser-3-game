@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import './assets/css/styles.scss';
+import {collectStar} from "./helper";
 
 const form = document.querySelector('form');
 const list = document.querySelector('#list');
@@ -35,6 +36,7 @@ var game = new Phaser.Game(config);
 let platforms;
 let player;
 let cursors;
+let stars;
 
 function preload () {
     this.load.image('sky', 'src/assets/img/sky.png');
@@ -61,7 +63,8 @@ function create () {
     platforms.create(750, 220, 'ground');
 
 
-    player = this.physics.add.sprite(Math.random() * 800, 450, 'dude');
+    const randomX = Math.floor(Math.random() * 800);
+    player = this.physics.add.sprite(randomX, 450, 'dude');
 
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
@@ -88,9 +91,20 @@ function create () {
         repeat: -1
     });
 
+    stars = this.physics.add.group({
+        key: 'star',
+        repeat: 11,
+        setXY: { x: 12, y: 0, stepX: 70 }
+    });
 
+    stars.children.iterate(function (child) {
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+    });
+
+    this.physics.add.collider(stars, platforms);
     this.physics.add.collider(player, platforms);
 
+    this.physics.add.overlap(player, stars, collectStar, null, this);
     socket = new WebSocket('ws://localhost:3000');
 
     // socket.onopen = () => {
@@ -102,7 +116,7 @@ function create () {
     // };
 
     socket.onclose = () => {
-        console.log('close connection')
+        console.log('Connection closed')
     };
 
     socket.onmessage = ws => {
