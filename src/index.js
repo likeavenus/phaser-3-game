@@ -123,17 +123,16 @@ function create () {
         // const liElem = document.createElement('li');
         // liElem.innerText = ws.data;
         // list.appendChild(liElem);
+        const newVelocity = JSON.parse(ws.data);
 
-        const initialPlayerX = parseInt(ws.data);
-
-        player.x = initialPlayerX;
-        console.log(initialPlayerX);
+        player.body.velocity.x = newVelocity.x;
+        player.body.velocity.y = newVelocity.y;
     };
 }
 
-function updatePlayerX() {
+function updateVelocity(newVelocity) {
     if (socket.readyState === socket.OPEN) {
-        socket.send(player.x)
+        socket.send(JSON.stringify(newVelocity))
     }
 }
 
@@ -145,7 +144,10 @@ function update () {
 
         player.anims.play('left', true);
 
-        updatePlayerX();
+        updateVelocity({
+            x: -160,
+            y: player.body.velocity.y
+        });
     }
     else if (cursors.right.isDown)
     {
@@ -153,7 +155,10 @@ function update () {
 
         player.anims.play('right', true);
 
-        updatePlayerX();
+        updateVelocity({
+            x: 160,
+            y: player.body.velocity.y
+        });
     }
     else
     {
@@ -161,14 +166,20 @@ function update () {
 
         player.anims.play('turn');
 
-        updatePlayerX();
+        updateVelocity({
+            x: 0,
+            y: player.body.velocity.y
+        });
     }
 
     if (cursors.up.isDown && player.body.touching.down)
     {
         player.setVelocityY(-330);
 
-        updatePlayerX();
+        updateVelocity({
+            x: player.body.velocity.x,
+            y: -330
+        });
     }
 
 
