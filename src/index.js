@@ -12,8 +12,6 @@ form.addEventListener('submit', e => {
 });
 let socket;
 
-
-
 var config = {
     type: Phaser.AUTO,
     width: 800,
@@ -37,6 +35,8 @@ let platforms;
 let player;
 let cursors;
 let stars;
+
+let players = [];
 
 function preload () {
     this.load.image('sky', 'src/assets/img/sky.png');
@@ -64,10 +64,11 @@ function create () {
 
 
     const randomX = Math.floor(Math.random() * 800);
-    player = this.physics.add.sprite(randomX, 450, 'dude');
 
-    player.setBounce(0.2);
-    player.setCollideWorldBounds(true);
+
+    // player = this.physics.add.sprite(randomX, 450, 'dude');
+    // player.setBounce(0.2);
+    // player.setCollideWorldBounds(true);
 
     cursors = this.input.keyboard.createCursorKeys();
 
@@ -102,85 +103,90 @@ function create () {
     });
 
     this.physics.add.collider(stars, platforms);
-    this.physics.add.collider(player, platforms);
+    // this.physics.add.collider(player, platforms);
 
-    this.physics.add.overlap(player, stars, collectStar, null, this);
+    // this.physics.add.overlap(player, stars, collectStar, null, this);
     socket = new WebSocket('ws://localhost:3000');
 
-    // socket.onopen = () => {
-    //     console.log('Socket is open')
-    //
-    //     if (socket.readyState === socket.OPEN) {
-    //         socket.send(player.x)
-    //     }
-    // };
+    socket.onopen = () => {
+        console.log('Socket is open')
+    };
 
     socket.onclose = () => {
         console.log('Connection closed')
     };
 
     socket.onmessage = ws => {
-        // const liElem = document.createElement('li');
-        // liElem.innerText = ws.data;
-        // list.appendChild(liElem);
         const newVelocity = JSON.parse(ws.data);
+        players = JSON.parse(ws.data);
+        // console.log(players);
+        // player.body.velocity.x = newVelocity.x;
+        // player.body.velocity.y = newVelocity.y;
+        players.forEach(player => {
+            player.game = this.physics.add.sprite(player.x, 450, 'dude');
+            console.log(player);
+            player.game.setBounce(0.2);
+            player.game.setCollideWorldBounds(true);
+            this.physics.add.collider(player.game, platforms);
 
-        player.body.velocity.x = newVelocity.x;
-        player.body.velocity.y = newVelocity.y;
+            this.physics.add.overlap(player.game, stars, collectStar, null, this);
+        })
     };
+
+
 }
 
 function updateVelocity(newVelocity) {
     if (socket.readyState === socket.OPEN) {
-        socket.send(JSON.stringify(newVelocity))
+        // socket.send(JSON.stringify(newVelocity))
     }
 }
 
 function update () {
 
-    if (cursors.left.isDown)
-    {
-        player.setVelocityX(-160);
-
-        player.anims.play('left', true);
-
-        updateVelocity({
-            x: -160,
-            y: player.body.velocity.y
-        });
-    }
-    else if (cursors.right.isDown)
-    {
-        player.setVelocityX(160);
-
-        player.anims.play('right', true);
-
-        updateVelocity({
-            x: 160,
-            y: player.body.velocity.y
-        });
-    }
-    else
-    {
-        player.setVelocityX(0);
-
-        player.anims.play('turn');
-
-        updateVelocity({
-            x: 0,
-            y: player.body.velocity.y
-        });
-    }
-
-    if (cursors.up.isDown && player.body.touching.down)
-    {
-        player.setVelocityY(-330);
-
-        updateVelocity({
-            x: player.body.velocity.x,
-            y: -330
-        });
-    }
+    // if (cursors.left.isDown)
+    // {
+    //     player.setVelocityX(-160);
+    //
+    //     player.anims.play('left', true);
+    //
+    //     updateVelocity({
+    //         x: -160,
+    //         y: player.body.velocity.y
+    //     });
+    // }
+    // else if (cursors.right.isDown)
+    // {
+    //     player.setVelocityX(160);
+    //
+    //     player.anims.play('right', true);
+    //
+    //     updateVelocity({
+    //         x: 160,
+    //         y: player.body.velocity.y
+    //     });
+    // }
+    // else
+    // {
+    //     player.setVelocityX(0);
+    //
+    //     player.anims.play('turn');
+    //
+    //     updateVelocity({
+    //         x: 0,
+    //         y: player.body.velocity.y
+    //     });
+    // }
+    //
+    // if (cursors.up.isDown && player.body.touching.down)
+    // {
+    //     player.setVelocityY(-330);
+    //
+    //     updateVelocity({
+    //         x: player.body.velocity.x,
+    //         y: -330
+    //     });
+    // }
 
 
 }

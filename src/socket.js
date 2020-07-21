@@ -9,9 +9,12 @@ server.on('connection', ws => {
     players.push({
         x: Math.floor(Math.random() * 800),
         id: id,
+        game: undefined,
         client: ws
     });
 
+    console.log(JSON.stringify(players));
+    ws.send(JSON.stringify(players));
 
     ws.on('message', msg => {
         players.forEach(player => {
