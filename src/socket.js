@@ -12,27 +12,25 @@ server.on('connection', ws => {
         game: undefined,
         client: ws
     });
+    ws.send(JSON.stringify({
+        type: 'init',
+        players: players
+    }));
 
-    console.log(JSON.stringify(players));
-    ws.send(JSON.stringify(players));
+    console.log(players);
 
     ws.on('message', msg => {
-        players.forEach(player => {
-            player.client.send(msg);
-        })
 
-        // server.clients.forEach(client => {
-        //     if (client.readyState === WebSocket.OPEN) {
-        //         players.forEach(player => {
-        //             if (player.id !== client.id) {
-        //
-        //                 client.send(msg);
-        //             }
-        //         })
-        //
-        //     }
-        // })
+        players.forEach(player => {
+            if (player.client.readyState !== ws && player.client.readyState === WebSocket.OPEN) {
+                player.client.send(msg);
+            }
+        })
     })
+});
+
+server.on('close', (ws) => {
+    console.log(ws, 'disconnected');
 });
 
 

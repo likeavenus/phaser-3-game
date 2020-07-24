@@ -1,15 +1,6 @@
 import Phaser from 'phaser';
 import './assets/css/styles.scss';
 import { collectStar } from "./helper";
-
-const form = document.querySelector('form');
-const list = document.querySelector('#list');
-const message = document.querySelector('#msg');
-
-form.addEventListener('submit', e => {
-    e.preventDefault();
-    socket.send(message.value);
-});
 let socket;
 
 var config = {
@@ -37,6 +28,7 @@ let cursors;
 let stars;
 
 let players = [];
+let data;
 
 function preload () {
     this.load.image('sky', 'src/assets/img/sky.png');
@@ -116,79 +108,85 @@ function create () {
         console.log('Connection closed')
     };
 
+    window.addEventListener('onbeforeunload', () => {
+        socket.close(1000, 'Player is offline');
+    });
+
     socket.onmessage = ws => {
-        const newVelocity = JSON.parse(ws.data);
-        players = JSON.parse(ws.data);
-        // console.log(players);
-        // player.body.velocity.x = newVelocity.x;
-        // player.body.velocity.y = newVelocity.y;
-        players.forEach(player => {
-            player.game = this.physics.add.sprite(player.x, 450, 'dude');
-            console.log(player);
-            player.game.setBounce(0.2);
-            player.game.setCollideWorldBounds(true);
-            this.physics.add.collider(player.game, platforms);
 
-            this.physics.add.overlap(player.game, stars, collectStar, null, this);
-        })
+        console.log(JSON.parse(ws.data))
+        data = JSON.parse(ws.data);
+
+        if (data.type === 'init') {
+            players = data.players;
+            players.forEach(player => {
+                updatePlayer(player, this)
+            })
+        }
+
+        if (data.type === 'update_player') {
+
+            players.forEach(player => {
+                if (player.id === data.player.id) {
+                    updatePlayer(data.player, this);
+                }
+            })
+        }
     };
-
-
 }
 
-function updateVelocity(newVelocity) {
+function updatePlayer(player, context) {
+    player.game = context.physics.add.sprite(player.x, 450, 'dude');
+    player.game.setBounce(0.2);
+    player.game.setCollideWorldBounds(true);
+    context.physics.add.collider(player.game, platforms);
+
+    context.physics.add.overlap(player.game, stars, collectStar, null, context);
+}
+
+function updateData(newData) {
     if (socket.readyState === socket.OPEN) {
-        // socket.send(JSON.stringify(newVelocity))
+        socket.send(JSON.stringify({
+            type: 'update_player',
+            player: newData
+        }))
     }
 }
 
 function update () {
+    if (players.length) {
+        if (cursors.left.isDown)
+        {
+            players[0].game.setVelocityX(-160);
 
-    // if (cursors.left.isDown)
-    // {
-    //     player.setVelocityX(-160);
-    //
-    //     player.anims.play('left', true);
-    //
-    //     updateVelocity({
-    //         x: -160,
-    //         y: player.body.velocity.y
-    //     });
-    // }
-    // else if (cursors.right.isDown)
-    // {
-    //     player.setVelocityX(160);
-    //
-    //     player.anims.play('right', true);
-    //
-    //     updateVelocity({
-    //         x: 160,
-    //         y: player.body.velocity.y
-    //     });
-    // }
-    // else
-    // {
-    //     player.setVelocityX(0);
-    //
-    //     player.anims.play('turn');
-    //
-    //     updateVelocity({
-    //         x: 0,
-    //         y: player.body.velocity.y
-    //     });
-    // }
-    //
-    // if (cursors.up.isDown && player.body.touching.down)
-    // {
-    //     player.setVelocityY(-330);
-    //
-    //     updateVelocity({
-    //         x: player.body.velocity.x,
-    //         y: -330
-    //     });
-    // }
+            players[0].game.anims.play('left', true);
 
+            updateData(players[0]);
+        }
+        else if (cursors.right.isDown)
+        {
+            players[0].game.setVelocityX(160);
 
+            players[0].game.anims.play('right', true);
+
+            updateData(players[0]);
+        }
+        else
+        {
+            players[0].game.setVelocityX(0);
+
+            players[0].game.anims.play('turn');
+
+            // updateData(players[0]);
+        }
+
+        if (cursors.up.isDown && players[0].game.body.touching.down)
+        {
+            players[0].game.setVelocityY(-330);
+
+            updateData(players[0]);
+        }
+    }
 }
 
 
